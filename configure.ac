@@ -41,6 +41,26 @@ PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.16, dummy=yes, AC_MSG_ERROR(GLib >= 2.16 i
 GLIB_LIBS="$GLIB_LIBS $GTHREAD_LIBS"
 AC_SUBST(GLIB_LIBS)
 
+# Check for systemd
+AC_ARG_WITH([systemdsystemunitdir],
+    [AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files])],
+    [],
+    [with_systemdsystemunitdir=auto])
+
+AS_IF([test "x$with_systemdsystemunitdir" = "xyes" -o "x$with_systemdsystemunitdir" = "xauto"], [
+    def_systemdsystemunitdir=$($PKG_CONFIG --variable=systemdsystemunitdir systemd)
+
+    AS_IF([test "x$def_systemdsystemunitdir" = "x"],
+        [AS_IF([test "x$with_systemdsystemunitdir" = "xyes"],
+            [AC_MSG_ERROR([systemd support requested but pkg-config unable to query systemd package])])
+         with_systemdsystemunitdir=no],
+        [with_systemdsystemunitdir="$def_systemdsystemunitdir"])])
+
+AS_IF([test "x$with_systemdsystemunitdir" != "xno"],
+    [AC_SUBST([systemdsystemunitdir], [$with_systemdsystemunitdir])])
+
+AM_CONDITIONAL([HAVE_SYSTEMD], [test "x$with_systemdsystemunitdir" != "xno"])
+
 AC_CONFIG_FILES([ \
         Makefile \
         ])
